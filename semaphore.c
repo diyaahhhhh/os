@@ -1,60 +1,42 @@
-#include <stdio.h>
-#include <stdlib.h>
+#include<stdio.h>
+#include<stdlib.h>
 
-// Simulated semaphores
-int rw_mutex = 1;   // resource lock
-int mutex = 1;      // protects read_count
-int read_try = 1;   // writer priority
-int read_count = 0; // number of readers
+int read_count=0;
+int mutex=1;
+int rw_mutex=1;
 
-// wait and signal functions
-void wait(int *s) {
-    while(*s <= 0); // busy wait
-    (*s)--;
+void wait(int *S){
+    while(*S<=0);
+    (*S)--;
 }
-
-void signal(int *s) {
-    (*s)++;
+void signal(int *S){
+    (*S)++;
 }
-
-// Reader function
-void reader(int id) {
-    wait(&read_try);     // check if writers want priority
-    wait(&mutex);
+void reader(int ID){
+    wait(&mutex); //locking
     read_count++;
-    if(read_count == 1) wait(&rw_mutex); // first reader locks resource
+    if(read_count==1){
+        wait(&rw_mutex);
+        }
     signal(&mutex);
-    signal(&read_try);
-
-    // critical section
-    printf("Reader %d is reading...\n", id);
-
+    printf("Reader %d is reading...\n",ID);
     wait(&mutex);
     read_count--;
-    if(read_count == 0) signal(&rw_mutex); // last reader unlocks resource
-    signal(&mutex);
+    if(read_count==0){
+        signal(&rw_mutex);
+    }
+        signal(&mutex);
 }
-
-// Writer function
-void writer(int id) {
-    wait(&read_try);   // block new readers
-    wait(&rw_mutex);   // exclusive access
-
-    // critical section
-    printf("Writer %d is writing...\n", id);
-
+void writer(int ID){
+    wait(&rw_mutex);
+    printf("Writer %d is writing...\n",ID);
     signal(&rw_mutex);
-    signal(&read_try);
 }
-
-int main() {
-    // simulate sequence of readers and writers
+int main(){
     reader(1);
     writer(1);
     reader(2);
     reader(3);
     writer(2);
-    reader(4);
-
-    return 0;
+return 0;
 }

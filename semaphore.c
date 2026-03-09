@@ -1,42 +1,41 @@
-#include<stdio.h>
-#include<stdlib.h>
+#include <stdio.h>
+#define SIZE 5   // buffer size
 
-int read_count=0;
-int mutex=1;
-int rw_mutex=1;
+int buffer[SIZE];
+int in = 0;      // index for producer
+int out = 0;     // index for consumer
+int count = 0;   // number of items in buffer
 
-void wait(int *S){
-    while(*S<=0);
-    (*S)--;
-}
-void signal(int *S){
-    (*S)++;
-}
-void reader(int ID){
-    wait(&mutex); //locking
-    read_count++;
-    if(read_count==1){
-        wait(&rw_mutex);
-        }
-    signal(&mutex);
-    printf("Reader %d is reading...\n",ID);
-    wait(&mutex);
-    read_count--;
-    if(read_count==0){
-        signal(&rw_mutex);
+void produce(int item) {
+    if(count == SIZE) {
+        printf("Buffer full! Producer waits...\n");
+    } else {
+        buffer[in] = item;
+        in = (in + 1) % SIZE;
+        count++;
+        printf("Producer produced item %d\n", item);
     }
-        signal(&mutex);
 }
-void writer(int ID){
-    wait(&rw_mutex);
-    printf("Writer %d is writing...\n",ID);
-    signal(&rw_mutex);
+
+void consume() {
+    if(count == 0) {
+        printf("Buffer empty! Consumer waits...\n");
+    } else {
+        int item = buffer[out];
+        out = (out + 1) % SIZE;
+        count--;
+        printf("Consumer consumed item %d\n", item);
+    }
 }
-int main(){
-    reader(1);
-    writer(1);
-    reader(2);
-    reader(3);
-    writer(2);
-return 0;
+
+int main() {
+    // simulate sequence of produce and consume
+    produce(1);
+    produce(2);
+    consume();
+    produce(3);
+    consume();
+    consume();
+    consume(); // this will show "Consumer waits" because buffer empty
+    return 0;
 }
